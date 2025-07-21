@@ -1,0 +1,40 @@
+version: '3.8'
+
+services:
+  # MongoDB Database
+  mongodb:
+    image: mongo:7.0
+    container_name: todo-mongodb
+    restart: unless-stopped
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: admin
+      MONGO_INITDB_ROOT_PASSWORD: password123
+      MONGO_INITDB_DATABASE: todoapp
+    ports:
+      - "27017:27017"
+    volumes:
+      - mongodb_data:/data/db
+      - ./init-mongo.js:/docker-entrypoint-initdb.d/init-mongo.js:ro
+    networks:
+      - todo-network
+
+  # Todo API Application
+  todo-api:
+    build: .
+    container_name: todo-api
+    restart: unless-stopped
+    ports:
+      - "8080:8080"
+    environment:
+      - MONGODB_URI=mongodb://admin:password123@mongodb:27017/todoapp?authSource=admin
+    depends_on:
+      - mongodb
+    networks:
+      - todo-network
+
+volumes:
+  mongodb_data:
+
+networks:
+  todo-network:
+    driver: bridge
